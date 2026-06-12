@@ -1,0 +1,150 @@
+' ==========================================================
+'  Meal, Fullness, and Weight Tracker & Analytics System
+'  Designed for Personalized Medicine & Complete Clinical Screening
+' ==========================================================
+
+Sub ShowMealForm()
+    Dim inputDate As Variant
+    Dim staple As Variant, main As Variant, side As Variant
+    Dim fullness As Variant, weight As Variant, exercise As Variant
+    Dim totalCount As Integer
+    Dim lastRow As Long
+    
+    ' 1. Initialize Sheet1 (Creates headers if they do not exist)
+    Call InitializeSheet
+    lastRow = Sheets("Sheet1").Cells(Rows.Count, 1).End(xlUp).Row + 1
+    
+    ' 2. User Input via Dialogs (Minimizing cognitive load to avoid bias)
+    inputDate = InputBox("Please enter the date.", "1. Date Input", Date)
+    If inputDate = "" Then Exit Sub
+    
+    staple = InputBox("Enter the count for [Staple Food] (0 if skipped)." & vbCrLf & "Guide: 1 bowl of rice, 1 slice of bread, 1 serving of noodles", "2. Staple Food Count", 0)
+    If staple = "" Then Exit Sub
+    
+    main = InputBox("Enter the count for [Main Dish] (0 if skipped)." & vbCrLf & "Guide: 1 plate of meat, 1 piece of fish, 1 egg dish, 1 soy product dish", "3. Main Dish Count", 0)
+    If main = "" Then Exit Sub
+    
+    side = InputBox("Enter the count for [Side Dish] (0 if skipped)." & vbCrLf & "Guide: 1 plate of salad, 1 small bowl/cup, 1 cup of vegetable soup", "4. Side Dish Count", 0)
+    If side = "" Then Exit Sub
+    
+    fullness = InputBox("Enter [Fullness Level] IMMEDIATELY after the meal." & vbCrLf & "5: Overeating, 3: Appropriate, 1: Almost empty, 0: Skipped meal", "5. Fullness Level (0-5)", 3)
+    If fullness = "" Then Exit Sub
+    
+    weight = InputBox("Enter current [Weight (kg)] (Same time daily, preferably morning)", "6. Body Weight", "")
+    If weight = "" Then Exit Sub
+    
+    exercise = InputBox("Enter [Exercise Intensity] for today (Optional)." & vbCrLf & "5: High, 3: Moderate, 1: Sedentary", "7. Exercise Intensity (1-5)", 3)
+    If exercise = "" Then Exit Sub
+
+    ' 3. Mathematical Logic & Data Processing (Avoiding Division by Zero)
+    totalCount = CInt(staple) + CInt(main) + CInt(side)
+    
+    ' Write data to Sheet1
+    With Sheets("Sheet1")
+        .Cells(lastRow, 1).Value = CDate(inputDate)
+        .Cells(lastRow, 2).Value = CInt(staple)
+        .Cells(lastRow, 3).Value = CInt(main)
+        .Cells(lastRow, 4).Value = CInt(side)
+        .Cells(lastRow, 5).Value = totalCount
+        
+        ' Compositional Data Analysis: Calculate ratios only if totalCount > 0
+        If totalCount > 0 Then
+            .Cells(lastRow, 6).Value = (CInt(staple) / totalCount) * 100
+            .Cells(lastRow, 7).Value = (CInt(main) / totalCount) * 100
+            .Cells(lastRow, 8).Value = (CInt(side) / totalCount) * 100
+        Else
+            .Cells(lastRow, 6).Value = 0
+            .Cells(lastRow, 7).Value = 0
+            .Cells(lastRow, 8).Value = 0
+        End If
+        
+        .Cells(lastRow, 9).Value = CInt(fullness)
+        .Cells(lastRow, 10).Value = CDbl(weight)
+        .Cells(lastRow, 11).Value = CInt(exercise)
+    End With
+    
+    MsgBox "Data successfully recorded.", vbInformation, "Success"
+    
+    ' 4. Clinical Logic: Full Red Flag Monitoring (Unintentional Loss & Gain)
+    Call CheckRedFlags(lastRow, CDbl(weight))
+    
+End Sub
+
+' ── Initial Sheet Configuration ──
+Sub InitializeSheet()
+    Dim ws As Worksheet
+    Set ws = Sheets("Sheet1")
+    If ws.Cells(1, 1).Value = "" Then
+        ws.Cells(1, 1).Resize(1, 11).Value = Array( _
+            "Date", "Staple Count", "Main Dish Count", "Side Dish Count", "Total Count", _
+            "Dietary Balance (Staple %)", "Dietary Balance (Main %)", "Dietary Balance (Side %)", _
+            "Fullness Level", "Weight (kg)", "Exercise Intensity")
+        ws.Rows(1).Font.Bold = True
+    End If
+End Sub
+
+' ── Clinical Alert Engine (Dual Red Flag Detection) ──
+Sub CheckRedFlags(currentRow As Long, currentWeight As Double)
+    Dim ws As Worksheet
+    Dim i As Long
+    Dim checkDate As Date
+    Dim pastWeight As Double
+    Dim weightDrop1Month As Boolean
+    Dim weightDrop6Month As Boolean
+    Dim weightGainSudden As Boolean
+    
+    Set ws = Sheets("Sheet1")
+    checkDate = ws.Cells(currentRow, 1).Value
+    
+    weightDrop1Month = False
+    weightDrop6Month = False
+    weightGainSudden = False
+    
+    ' Scan past data to evaluate clinical screening criteria
+    For i = currentRow - 1 To 2 Step -1
+        ' --- 1) Evaluation for Unintentional Weight Loss ---
+        ' Check 1-month window (28 to 35 days ago)
+        If ws.Cells(i, 1).Value >= checkDate - 35 And ws.Cells(i, 1).Value <= checkDate - 28 Then
+            pastWeight = ws.Cells(i, 10).Value
+            If (pastWeight - currentWeight) >= 4.5 Then
+                weightDrop1Month = True
+            End If
+        End If
+        
+        ' Check 6-month window (170 to 190 days ago)
+        If ws.Cells(i, 1).Value >= checkDate - 190 And ws.Cells(i, 1).Value <= checkDate - 170 Then
+            pastWeight = ws.Cells(i, 10).Value
+            If ((pastWeight - currentWeight) / pastWeight) >= 0.05 Then
+                weightDrop6Month = True
+            End If
+        End If
+        
+        ' --- 2) Evaluation for Unintentional Weight Gain ---
+        ' Check short-term sudden increase (within the last 3 to 7 days)
+        ' Clinically, rapid weight gain without dietary changes indicates fluid retention (edema)
+        If ws.Cells(i, 1).Value >= checkDate - 7 And ws.Cells(i, 1).Value <= checkDate - 3 Then
+            pastWeight = ws.Cells(i, 10).Value
+            ' If weight gains 2.0 kg or more within a week despite stable baseline
+            If (currentWeight - pastWeight) >= 2.0 Then
+                weightGainSudden = True
+            End If
+        End If
+    Next i
+    
+    ' Trigger Red Flag Warnings if baseline lifestyle (diet/exercise) is stable
+    If weightDrop1Month Then
+        MsgBox "【⚠️ CRITICAL MEDICAL ALERT: RED FLAG DETECTED】" & vbCrLf & _
+               "Unintentional weight loss of 4.5 kg or more within 1 month detected, while diet and exercise remain stable." & vbCrLf & _
+               "Possible risks include malignancy (cancer), Graves' disease, worsening diabetes, or malabsorption. Immediate medical consultation is highly recommended.", vbCritical, "Unintentional Weight Loss"
+    
+    ElseIf weightDrop6Month Then
+        MsgBox "【⚠️ CRITICAL MEDICAL ALERT: RED FLAG DETECTED】" & vbCrLf & _
+               "Unintentional weight loss of 5% or more within 6 months detected, while diet and exercise remain stable." & vbCrLf & _
+               "Possible risks include malignancy (cancer), Graves' disease, worsening diabetes, or malabsorption. Immediate medical consultation is highly recommended.", vbCritical, "Unintentional Weight Loss"
+    
+    ElseIf weightGainSudden Then
+        MsgBox "【⚠️ CRITICAL MEDICAL ALERT: RED FLAG DETECTED】" & vbCrLf & _
+               "Unintentional rapid weight gain detected, while diet and exercise remain stable." & vbCrLf & _
+               "Possible risks include acute heart failure, kidney failure, liver failure (edematous disorders), or hypothyroidism. Immediate medical consultation is highly recommended.", vbCritical, "Unintentional Weight Gain"
+    End If
+End Sub
