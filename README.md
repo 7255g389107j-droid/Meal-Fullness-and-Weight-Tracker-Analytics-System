@@ -65,7 +65,7 @@ This repository contains a native Excel VBA macro implementation tailored for `S
 1. Open your Excel workbook (Ensure the active sheet is named **`Sheet1`**).
 2. Press `Alt + F11` (`Opt + F11` on Mac) to open the VBA Editor.
 3. Click `Insert` > `Module` from the menu bar.
-4. Paste the macro code provided in `tracker.vba` into the window.
+4. Paste the macro code provided in `Microsoft Excel (.xltm) Meal, Fullness, and Weight Tracker & Analytics System` into the window.
 5. Close the VBA editor. 
 6. (Optional) Insert a shape/button onto `Sheet1`, right-click it, select **Assign Macro**, and choose `ShowMealForm`.
 7. Save the file as an **Excel Macro-Enabled Workbook (`*.xlsm`)**.
