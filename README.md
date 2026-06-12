@@ -1,6 +1,8 @@
 # Meal-Fullness-and-Weight-Tracker-Analytics-System
+
 A minimal, low-burden PHR protocol and Excel/VBA tracker that bridges behavioral science, compositional data statistics, and clinical medical screening for personalized medicine.
-# Minimalist Nutrition & Clinical Screening Tracker (PHR Protocol)
+
+## Minimalist Nutrition & Clinical Screening Tracker (PHR Protocol)
 
 An elegant, low-burden Personal Health Record (PHR) protocol and Excel/VBA implementation designed for personalized medicine. This system successfully resolves the historical trade-off between user compliance (low data-entry burden) and rigorous clinical utility.
 
@@ -19,7 +21,7 @@ This protocol is a precise crossover of four distinct scientific domains:
 2. **Nutritional Science (The SV Method)**
    * Uses the **Serving (SV) Method** aligned with the dietary guidelines recommended by the Japanese Ministry of Health, Labour and Welfare and the Ministry of Agriculture, Forestry and Fisheries. It simplifies tracking into 3 core functional categories (Staple, Main, Side) without tedious gram or calorie counting.
 
-3. **Mathematical & (Compositional Data Analysis - CoDA)**
+3. **Mathematical & Statistical Analysis (Compositional Data Analysis - CoDA)**
    * Converts absolute dish counts into a **constant-sum ratio (summing to 100%)** to serve as a robust mathematical proxy for macronutrient (PFC) balance. 
    * Includes strict conditional handling (`IF Total Count > 0`) to mathematically eliminate division-by-zero errors during periods of fasting.
 
@@ -73,4 +75,5 @@ This repository contains a native Excel VBA macro implementation tailored for `S
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](https://opensource.org) page for legal details.
+
 This project is open-source. Feel free to fork, optimize, or adapt this protocol into mobile PHR applications, chat-bots, or clinical research pipelines.
